@@ -3,8 +3,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
 from innotter.views import SerializersPermissionsViewSet
-from . import serializers
-from .models import Page
+from .models import Page, Tag, Post
+from .serializers import (
+    page_serializers,
+    post_serializers,
+    tag_serializers,
+)
 
 
 @api_view()
@@ -15,13 +19,50 @@ def pages_view(request):
 class PagesViewSet(SerializersPermissionsViewSet):
 
     queryset = Page.objects.all()
-    default_serializer_class = serializers.PageSerializer
+    default_serializer_class = page_serializers.PageSerializer
 
     serializer_classes_by_action = {
-        'create': serializers.PageSerializer,
-        'update': serializers.PageSerializer,
-        'list': serializers.PageSerializer,
-        'retrieve': serializers.PageSerializer,
+        'create': page_serializers.PageSerializer,
+        'update': page_serializers.PageSerializer,
+        'list': page_serializers.PageSerializer,
+        'retrieve': page_serializers.PageSerializer,
+    }
+
+    permission_classes_by_action = {
+        'create': (AllowAny,),
+        'update': (AllowAny,),
+        'partial_update': (AllowAny,),
+        'retrieve': (AllowAny,),
+        'list': (AllowAny,),
+        'destroy': (AllowAny,),
+    }
+
+
+class TagsViewSet(SerializersPermissionsViewSet):
+
+    queryset = Tag.objects.all()
+    default_serializer_class = tag_serializers.TagSerializer
+
+    permission_classes_by_action = {
+        'create': (AllowAny,),
+        'update': (AllowAny,),
+        'partial_update': (AllowAny,),
+        'retrieve': (AllowAny,),
+        'list': (AllowAny,),
+        'destroy': (AllowAny,),
+    }
+
+
+class PostsViewSet(SerializersPermissionsViewSet):
+
+    queryset = Post.objects.all()
+    default_serializer_class = post_serializers.PostSerializer
+
+    serializer_classes_by_action = {
+        'create': post_serializers.CreatePostSerializer,
+        'update': post_serializers.UpdatePostSerializer,
+        'list': post_serializers.RetrievePostSerializer,
+        'retrieve': post_serializers.RetrievePostSerializer,
     }
 
     permission_classes_by_action = {

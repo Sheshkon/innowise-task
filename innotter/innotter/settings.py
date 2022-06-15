@@ -41,8 +41,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'users.apps.UsersConfig',
     'pages.apps.PagesConfig',
-    'posts.apps.PostsConfig',
-    'tags.apps.TagsConfig',
 ]
 
 MIDDLEWARE = [
