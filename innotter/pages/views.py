@@ -1,12 +1,10 @@
-from rest_framework import mixins, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import Page
 
-from .serializers import (
-    PageSerializer,
-)
+from innotter.views import SerializersPermissionsViewSet
+from . import serializers
+from .models import Page
 
 
 @api_view()
@@ -14,21 +12,16 @@ def pages_view(request):
     return Response({"message": "Pages"})
 
 
-class PagesViewSet(mixins.CreateModelMixin,
-                   mixins.RetrieveModelMixin,
-                   mixins.UpdateModelMixin,
-                   mixins.DestroyModelMixin,
-                   mixins.ListModelMixin,
-                   viewsets.GenericViewSet):
+class PagesViewSet(SerializersPermissionsViewSet):
 
     queryset = Page.objects.all()
-    default_serializer_class = PageSerializer
+    default_serializer_class = serializers.PageSerializer
 
     serializer_classes_by_action = {
-        'create': PageSerializer,
-        'update': PageSerializer,
-        'list': PageSerializer,
-        'retrieve': PageSerializer,
+        'create': serializers.PageSerializer,
+        'update': serializers.PageSerializer,
+        'list': serializers.PageSerializer,
+        'retrieve': serializers.PageSerializer,
     }
 
     permission_classes_by_action = {
@@ -39,14 +32,3 @@ class PagesViewSet(mixins.CreateModelMixin,
         'list': (AllowAny,),
         'destroy': (AllowAny,),
     }
-
-    def get_serializer_class(self):
-        return self.serializer_classes_by_action.get(self.action, self.default_serializer_class)
-
-    def get_permissions(self):
-        try:
-            # return permission_classes depending on `action`
-            return [permission() for permission in self.permission_classes_by_action[self.action]]
-        except KeyError:
-            # action is not set return default permission_classes
-            return [permission() for permission in self.permission_classes]

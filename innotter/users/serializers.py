@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from users.models import User
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -44,3 +44,6 @@ class LoginSerializer(BaseUserSerializer):
 
     class Meta(BaseUserSerializer.Meta):
         fields = ('username', 'password')
+
+
+
