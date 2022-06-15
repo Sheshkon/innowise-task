@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Post
+from pages.models import Post
 
 
 class BasePostSerializer(serializers.ModelSerializer):
