@@ -1,6 +1,7 @@
-from django.urls import path
-from .views import pages_view
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = [
-    path('pages/', pages_view)
-]
+from .views import pages_view, PagesViewSet
+
+router = DefaultRouter()
+router.register(r'pages', PagesViewSet, basename='pages')
+urlpatterns = router.urls
