@@ -1,8 +1,6 @@
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
 
-from innotter.views import SerializersPermissionsViewSet
+from innotter.views import SerializersPermissionsBaseViewSet
 from .models import Page, Tag, Post
 from .serializers import (
     page_serializers,
@@ -11,12 +9,7 @@ from .serializers import (
 )
 
 
-@api_view()
-def pages_view(request):
-    return Response({"message": "Pages"})
-
-
-class PagesViewSet(SerializersPermissionsViewSet):
+class PagesBaseViewSet(SerializersPermissionsBaseViewSet):
 
     queryset = Page.objects.all()
     default_serializer_class = page_serializers.PageSerializer
@@ -38,7 +31,7 @@ class PagesViewSet(SerializersPermissionsViewSet):
     }
 
 
-class TagsViewSet(SerializersPermissionsViewSet):
+class TagsBaseViewSet(SerializersPermissionsBaseViewSet):
 
     queryset = Tag.objects.all()
     default_serializer_class = tag_serializers.TagSerializer
@@ -53,7 +46,7 @@ class TagsViewSet(SerializersPermissionsViewSet):
     }
 
 
-class PostsViewSet(SerializersPermissionsViewSet):
+class PostsBaseViewSet(SerializersPermissionsBaseViewSet):
 
     queryset = Post.objects.all()
     default_serializer_class = post_serializers.PostSerializer

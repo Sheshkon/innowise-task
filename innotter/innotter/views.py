@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 
 
-class SerializersPermissionsViewSet(ModelViewSet):
+class SerializersPermissionsBaseViewSet(ModelViewSet):
     queryset = None
     default_serializer_class = None
     serializer_classes_by_action = {}
