@@ -13,3 +13,6 @@ class PageSerializer(BasePageSerializer):
     class Meta(BasePageSerializer.Meta):
         fields = '__all__'
 
+
+
+

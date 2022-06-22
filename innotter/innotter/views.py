@@ -13,7 +13,13 @@ class SerializersPermissionsBaseViewSet(ModelViewSet):
     def get_permissions(self):
         try:
             # return permission_classes depending on `action`
-            return [permission() for permission in self.permission_classes_by_action[self.action]]
+            print(self.action)
+            permissions = [permission() for permission in self.permission_classes_by_action[self.action]]
+            # print(self.action)
+            return permissions
+
         except KeyError:
             # action is not set return default permission_classes
-            return [permission() for permission in self.permission_classes]
+            permissions = [permission() for permission in self.permission_classes]
+            return permissions
+

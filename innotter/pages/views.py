@@ -2,6 +2,9 @@ from rest_framework.permissions import AllowAny
 
 from innotter.views import SerializersPermissionsBaseViewSet
 from .models import Page, Tag, Post
+from . import permissions
+from users.permissions import IsAdmin, IsModerator, IsNotAnonymous, IsNotBlocked
+
 from .serializers import (
     page_serializers,
     post_serializers,
@@ -9,47 +12,49 @@ from .serializers import (
 )
 
 
-class PagesBaseViewSet(SerializersPermissionsBaseViewSet):
+class PagesViewSet(SerializersPermissionsBaseViewSet):
 
     queryset = Page.objects.all()
     default_serializer_class = page_serializers.PageSerializer
 
-    serializer_classes_by_action = {
-        'create': page_serializers.PageSerializer,
-        'update': page_serializers.PageSerializer,
-        'list': page_serializers.PageSerializer,
-        'retrieve': page_serializers.PageSerializer,
-    }
-
     permission_classes_by_action = {
-        'create': (AllowAny,),
-        'update': (AllowAny,),
-        'partial_update': (AllowAny,),
-        'retrieve': (AllowAny,),
-        'list': (AllowAny,),
-        'destroy': (AllowAny,),
+        'create': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'partial_update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'retrieve': (AllowAny, permissions.IsNotPrivatePage,),
+        'list': (AllowAny, permissions.IsNotPrivatePage,),
+        'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
     }
 
 
-class TagsBaseViewSet(SerializersPermissionsBaseViewSet):
+class TagsViewSet(SerializersPermissionsBaseViewSet):
 
     queryset = Tag.objects.all()
     default_serializer_class = tag_serializers.TagSerializer
 
     permission_classes_by_action = {
-        'create': (AllowAny,),
-        'update': (AllowAny,),
-        'partial_update': (AllowAny,),
-        'retrieve': (AllowAny,),
-        'list': (AllowAny,),
-        'destroy': (AllowAny,),
+        'create': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'partial_update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'retrieve': (AllowAny, permissions.IsNotPrivatePage),
+        'list': (AllowAny, permissions.IsNotPrivatePage),
+        'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
     }
 
 
-class PostsBaseViewSet(SerializersPermissionsBaseViewSet):
+class PostsViewSet(SerializersPermissionsBaseViewSet):
 
     queryset = Post.objects.all()
     default_serializer_class = post_serializers.PostSerializer
+
+    permission_classes_by_action = {
+        'create': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'partial_update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'retrieve': (AllowAny,),
+        'list': (AllowAny,),
+        'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+    }
 
     serializer_classes_by_action = {
         'create': post_serializers.CreatePostSerializer,
@@ -58,11 +63,4 @@ class PostsBaseViewSet(SerializersPermissionsBaseViewSet):
         'retrieve': post_serializers.RetrievePostSerializer,
     }
 
-    permission_classes_by_action = {
-        'create': (AllowAny,),
-        'update': (AllowAny,),
-        'partial_update': (AllowAny,),
-        'retrieve': (AllowAny,),
-        'list': (AllowAny,),
-        'destroy': (AllowAny,),
-    }
+

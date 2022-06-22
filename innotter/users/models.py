@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+from .manager import UserManager
+
 
 class User(AbstractUser):
     class Roles(models.TextChoices):
@@ -13,6 +15,11 @@ class User(AbstractUser):
     role = models.CharField(max_length=9, choices=Roles.choices)
     title = models.CharField(max_length=80)
     is_blocked = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    objects = UserManager()
 
     def __str__(self):
         return self.username
