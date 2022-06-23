@@ -10,6 +10,7 @@ class IsNotAnonymous(permissions.BasePermission):
 class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
+        print(request.user)
         return request.user.is_staff or request.user.role == request.user.Roles.ADMIN.value
 
 

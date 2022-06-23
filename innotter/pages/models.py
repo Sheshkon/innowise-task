@@ -12,6 +12,7 @@ class Page(models.Model):
     is_private = models.BooleanField(default=False)
     follow_requests = models.ManyToManyField('users.User', related_name='requests')
     unblock_date = models.DateTimeField(null=True, blank=True)
+    is_permanent_blocked = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -35,4 +36,9 @@ class Post(models.Model):
         return str(self.updated_at)
 
 
+class Like(models.Model):
+    post = models.ForeignKey('Post', on_delete=models.SET_NULL, related_name='likes', blank=True, null=True)
+    owner = models.ForeignKey('users.User', on_delete=models.SET_NULL, related_name='likes', blank=True, null=True)
 
+    def __str__(self):
+        return str(self.owner)

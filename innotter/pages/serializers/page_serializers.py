@@ -14,5 +14,13 @@ class PageSerializer(BasePageSerializer):
         fields = '__all__'
 
 
+class BlockPageSerializer(BasePageSerializer):
 
+    is_to_permanent = serializers.BooleanField(write_only=True, default=False)
 
+    class Meta(BasePageSerializer.Meta):
+
+        fields = ('is_to_permanent', 'unblock_date')
+        extra_kwargs = {
+            'unblock_date': {'read_only': True},
+        }

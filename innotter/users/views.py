@@ -38,7 +38,7 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
     }
 
     @method_decorator(ensure_csrf_cookie)
-    @action(detail=False, methods=('post',), url_path='login_user')
+    @action(detail=False, methods=('post',))
     def login_user(self, request):
         user = validate_user(request.data)
         serialized_user = self.get_serializer(user).data
@@ -52,7 +52,7 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
 
         return response
 
-    @action(detail=False, methods=('post',), url_path='refresh')
+    @action(detail=False, methods=('post',))
     @method_decorator(csrf_protect)
     def refresh_token(self, request):
         '''
@@ -64,7 +64,7 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
         access_token = generate_access_token(user)
         return Response({'access_token': access_token})
 
-    @action(detail=False, methods=('post', ), url_path='register')
+    @action(detail=False, methods=('post', ))
     def register(self, request):
         serializer = serializers.RegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
