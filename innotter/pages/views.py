@@ -7,7 +7,11 @@ from innotter.views import SerializersPermissionsBaseViewSet
 from .models import Page, Tag, Post, Like
 from . import permissions
 from users.permissions import IsAdmin, IsModerator, IsNotAnonymous, IsNotBlocked
-from .services import block_page
+from .services import (
+    block_page,
+    create_like,
+    create_post,
+)
 
 from .serializers import (
     page_serializers,
@@ -24,22 +28,32 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
 
     serializer_classes_by_action = {
         'block': page_serializers.BlockPageSerializer,
+        'create': page_serializers.CreatePageSerializer,
+        'update': page_serializers.UpdatePageSerializer,
+        'retrieve': page_serializers.RetrievePageSerializer,
+        'list': page_serializers.ListPageSerializer,
     }
 
     permission_classes_by_action = {
         'create': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
         'update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
         'partial_update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
-        'retrieve': (AllowAny, permissions.IsNotPrivatePage,),
-        'list': (AllowAny, permissions.IsNotPrivatePage,),
+        'retrieve': (AllowAny, permissions.IsNotPrivatePage, permissions.IsOwnerOrReadOnly),
+        'list': (AllowAny,),
         'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
         'block': (IsAdmin | IsModerator,),
     }
 
     @action(detail=True, methods=('patch',))
-    def block(self, request, pk=None):
-        print('request.user', request.user)
+    def add_tags(self, request, pk=None):
+        pass
 
+    @action(detail=True, methods=('patch',))
+    def delete_tags(self, request, pk=None):
+        pass
+
+    @action(detail=True, methods=('patch',))
+    def block(self, request, pk=None):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         page = block_page(page=self.get_object(), is_to_permanent=serializer.validated_data.get('is_to_permanent'))
@@ -48,6 +62,12 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
             'unblock_date': page.unblock_date,
         }
         return Response(status=HTTP_200_OK, data=response_data)
+
+    def get_queryset(self):
+        if self.action == 'list' and self.requset.user == 'user':
+            return Page.objects.filter(owner=self.request.user)
+
+        return self.queryset
 
 
 class TagsViewSet(SerializersPermissionsBaseViewSet):
@@ -86,6 +106,15 @@ class PostsViewSet(SerializersPermissionsBaseViewSet):
         'retrieve': post_serializers.RetrievePostSerializer,
     }
 
+    def perform_create(self, serializer):
+        create_post(user=self.request.user, serialized_post=serializer.validated_data)
+
+    def get_queryset(self):
+        if self.action == 'list' and self.requset.user == 'user':
+            return Post.objects.filter(page__owner=self.request.user)
+
+        return self.queryset
+
 
 class LikeViewSet(SerializersPermissionsBaseViewSet):
 
@@ -93,14 +122,23 @@ class LikeViewSet(SerializersPermissionsBaseViewSet):
     default_serializer_class = like_serializer.LikeSerializer
 
     permission_classes_by_action = {
-        'create': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'create': (IsNotAnonymous, IsNotBlocked, IsAdmin | IsModerator,),
         'retrieve': (AllowAny,),
-        'list': (AllowAny,),
         'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'list': (AllowAny,),
     }
 
     serializer_classes_by_action = {
-        'create': post_serializers.CreatePostSerializer,
-        'list': post_serializers.RetrievePostSerializer,
-        'retrieve': post_serializers.RetrievePostSerializer,
+        'create': like_serializer.CreateLikeSerializer,
+        'list': like_serializer.RetrieveLikeSerializer,
+        'retrieve': like_serializer.RetrieveLikeSerializer,
     }
+
+    def perform_create(self, serializer):
+        create_like(user=self.request.user, post=serializer.validated_data.get('post'))
+
+    def get_queryset(self):
+        if self.action == 'list' and self.requset.user == 'user':
+            return Like.objects.filter(owner=self.request.user)
+
+        return self.queryset

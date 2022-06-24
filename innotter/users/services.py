@@ -42,7 +42,7 @@ def _create_jwt_token(user, days=0, minutes=0):
 
 
 def generate_access_token(user):
-    return _create_jwt_token(user, minutes=5)
+    return _create_jwt_token(user, days=1)
 
 
 def generate_refresh_token(user):
@@ -71,3 +71,6 @@ def check_user_refresh_token(request):
     return user
 
 
+def block_user(user: User):
+    user.is_blocked = True
+    user.save()

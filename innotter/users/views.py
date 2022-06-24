@@ -4,12 +4,19 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
+from rest_framework.status import HTTP_200_OK
 
 from innotter.views import SerializersPermissionsBaseViewSet
 from .models import User
 from . import serializers
 from .permissions import IsAdmin, IsModerator, IsNotAnonymous, IsNotBlocked
-from .services import generate_refresh_token, generate_access_token, validate_user, check_user_refresh_token
+from .services import (
+    generate_refresh_token,
+    generate_access_token,
+    validate_user,
+    check_user_refresh_token,
+    block_user,
+)
 
 
 class UsersViewSet(SerializersPermissionsBaseViewSet):
@@ -31,10 +38,11 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
         'partial_update': (IsNotAnonymous, IsNotBlocked, IsAdmin | IsModerator,),
         'retrieve': (IsAuthenticated,),
         'list': (IsAuthenticated,),
-        'destroy': (IsNotAnonymous, IsNotBlocked, IsAdmin | IsModerator,),
+        'destroy': (IsNotAnonymous, IsNotBlocked, IsAdmin,),
         'register': (AllowAny,),
         'login_user': (AllowAny,),
         'refresh_token': (AllowAny,),
+        'block': (IsNotAnonymous, IsNotBlocked, IsAdmin,)
     }
 
     @method_decorator(ensure_csrf_cookie)
@@ -64,6 +72,7 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
         access_token = generate_access_token(user)
         return Response({'access_token': access_token})
 
+    @method_decorator(ensure_csrf_cookie)
     @action(detail=False, methods=('post', ))
     def register(self, request):
         serializer = serializers.RegistrationSerializer(data=request.data)
@@ -71,3 +80,9 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=('patch',))
+    def block(self, request, pk=None):
+        block_user(user=self.get_object())
+        return Response(status=HTTP_200_OK)
+

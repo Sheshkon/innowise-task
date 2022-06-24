@@ -14,15 +14,17 @@ class LikeSerializer(BaseLikeSerializer):
 
 class CreateLikeSerializer(BaseLikeSerializer):
     class Meta(BaseLikeSerializer.Meta):
-        fields = '__all__'
+        fields = ('id', 'post', 'owner',)
+        read_only_fields = ('owner',)
 
 
 class UpdateLikeSerializer(BaseLikeSerializer):
     class Meta(BaseLikeSerializer.Meta):
-        fields = '__all__'
+        fields = ('post',)
 
 
 class RetrieveLikeSerializer(BaseLikeSerializer):
+    owner = serializers.SlugRelatedField(slug_field='username', read_only=True)
 
     class Meta(BaseLikeSerializer.Meta):
-        fields = '__all__'
+        fields = ('id', 'post', 'owner')
