@@ -1,5 +1,6 @@
 from rest_framework import permissions
-from . import models
+
+from pages import models
 
 
 class BasePermissionPage(permissions.BasePermission):

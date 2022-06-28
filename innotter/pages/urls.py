@@ -1,6 +1,6 @@
 from rest_framework.routers import DefaultRouter
 
-from .views import PagesViewSet, TagsViewSet, PostsViewSet, LikeViewSet
+from pages.views import PagesViewSet, TagsViewSet, PostsViewSet, LikeViewSet
 
 router = DefaultRouter()
 

@@ -4,16 +4,17 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 
 from innotter.views import SerializersPermissionsBaseViewSet
-from .models import Page, Tag, Post, Like
-from . import permissions
 from users.permissions import IsAdmin, IsModerator, IsNotAnonymous, IsNotBlocked
-from .services import (
+from pages import permissions
+from pages.models import Page, Tag, Post, Like
+
+from pages.services import (
     block_page,
     create_like,
     create_post,
 )
 
-from .serializers import (
+from pages.serializers import (
     page_serializers,
     post_serializers,
     tag_serializers,

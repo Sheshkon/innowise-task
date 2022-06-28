@@ -1,9 +1,11 @@
 import jwt
+from rest_framework import exceptions
 from rest_framework.authentication import BaseAuthentication
 from django.middleware.csrf import CsrfViewMiddleware
-from rest_framework import exceptions
 from django.conf import settings
 from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class CSRFCheck(CsrfViewMiddleware):
@@ -20,14 +22,13 @@ class SafeJWTAuthentication(BaseAuthentication):
 
     def authenticate(self, request):
 
-        User = get_user_model()
-        authorization_heaader = request.headers.get('Authorization')
+        authorization_header = request.headers.get('Authorization')
 
-        if not authorization_heaader:
+        if not authorization_header:
             raise exceptions.AuthenticationFailed('Is not authenticated. Not found Authorization header.')
         try:
             # header = 'Token xxxxxxxxxxxxxxxxxxxxxxxx'
-            access_token = authorization_heaader.split(' ')[1]
+            access_token = authorization_header.split(' ')[1]
             payload = jwt.decode(
                 access_token, settings.SECRET_KEY, algorithms=['HS256'])
 
@@ -36,7 +37,8 @@ class SafeJWTAuthentication(BaseAuthentication):
         except IndexError:
             raise exceptions.AuthenticationFailed('Token prefix missing.')
 
-        user = User.objects.get(id=payload['user_id'])
+        user = User.objects.filter(id=payload['user_id']).first()
+
         if user is None:
             raise exceptions.AuthenticationFailed('User not found.')
 
@@ -58,7 +60,7 @@ class SafeJWTAuthentication(BaseAuthentication):
         # populates request.META['CSRF_COOKIE'], which is used in process_view()
         check.process_request(request)
         reason = check.process_view(request, None, (), {})
-        print(reason)
+
         if reason:
             # CSRF failed, bail with explicit error message
             raise exceptions.PermissionDenied('CSRF Failed: %s' % reason)

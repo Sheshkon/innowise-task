@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.utils.decorators import method_decorator
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -7,16 +8,18 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from rest_framework.status import HTTP_200_OK
 
 from innotter.views import SerializersPermissionsBaseViewSet
-from .models import User
-from . import serializers
-from .permissions import IsAdmin, IsModerator, IsNotAnonymous, IsNotBlocked
-from .services import (
+from users import serializers
+from users.permissions import IsAdmin, IsModerator, IsNotAnonymous, IsNotBlocked
+
+from users.services import (
     generate_refresh_token,
     generate_access_token,
     validate_user,
     check_user_refresh_token,
     block_user,
 )
+
+User = get_user_model()
 
 
 class UsersViewSet(SerializersPermissionsBaseViewSet):

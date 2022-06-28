@@ -1,7 +1,10 @@
 from datetime import datetime, timedelta
+from django.contrib.auth import get_user_model
+
 from innotter.settings import BLOCK_DAYS
-from .models import Page, Like, Post
-from users.models import User
+from pages.models import Like, Post, Page
+
+User = get_user_model()
 
 
 def is_not_blocked(unblock_date):

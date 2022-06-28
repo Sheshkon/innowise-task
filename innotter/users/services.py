@@ -1,10 +1,11 @@
-from datetime import datetime, timedelta
-
 import jwt
+from datetime import datetime, timedelta
+from django.contrib.auth import get_user_model
 from rest_framework import exceptions
 
-from .models import User
 from innotter.settings import SECRET_KEY
+
+User = get_user_model()
 
 
 def validate_user(data):

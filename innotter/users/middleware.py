@@ -1,7 +1,8 @@
 from django.urls import resolve
 from django.utils.deprecation import MiddlewareMixin
+
 from innotter.settings import JWT_WHITELIST
-from .authentication import SafeJWTAuthentication
+from users.authentication import SafeJWTAuthentication
 
 
 class AuthMiddleware(MiddlewareMixin):
