@@ -2,11 +2,12 @@
 FROM python:3
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV POETRY_VERSION=1.1.13
 
 WORKDIR /code
 
-COPY requirements.txt /code/
-RUN pip install -r requirements.txt
+RUN pip install "poetry==$POETRY_VERSION"
 
-COPY . /code/
-
+COPY poetry.lock pyproject.toml /code/
+RUN poetry config virtualenvs.create false \
+  && poetry install --no-interaction --no-ansi
