@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.utils.decorators import method_decorator
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -25,6 +26,10 @@ User = get_user_model()
 class UsersViewSet(SerializersPermissionsBaseViewSet):
     queryset = User.objects.all()
     default_serializer_class = serializers.UserSerializer
+
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('username', 'first_name')
+    search_fields = ('username', 'first_name',)
 
     serializer_classes_by_action = {
         'create': serializers.CreateUserSerializer,
