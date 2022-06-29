@@ -43,9 +43,10 @@ class UpdatePageSerializer(BasePageSerializer):
 
 class ListPageSerializer(BasePageSerializer):
     owner = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    tags = serializers.SlugRelatedField(slug_field='name', many=True, read_only=True)
 
     class Meta(BasePageSerializer.Meta):
-        fields = ('id', 'name', 'owner', 'is_private',)
+        fields = ('id', 'name', 'owner', 'tags', 'is_private',)
 
 
 class TagsToPageSerializer(BasePageSerializer):
