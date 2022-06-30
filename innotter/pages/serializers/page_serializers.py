@@ -54,5 +54,4 @@ class TagsToPageSerializer(BasePageSerializer):
 
     class Meta(BasePageSerializer.Meta):
         fields = ('id', 'tags', 'list_tag_names',)
-        read_only_fields =('tags',)
-
+        read_only_fields = ('tags',)
