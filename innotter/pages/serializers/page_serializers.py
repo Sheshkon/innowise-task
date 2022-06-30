@@ -64,7 +64,7 @@ class ListFollowRequestSerializer(BasePageSerializer):
         fields = ('id', 'name', 'owner', 'follow_requests')
 
 
-class AcceptRequestSerializer(BasePageSerializer):
+class AcceptOrRejectRequestSerializer(BasePageSerializer):
     one = serializers.BooleanField(default=False)
     user_id = serializers.CharField(required=False, write_only=True)
 
