@@ -1,9 +1,11 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 
 from innotter.views import SerializersPermissionsBaseViewSet
+from pages.filters import PageFilter
 from users.permissions import IsAdmin, IsModerator, IsNotAnonymous, IsNotBlocked
 from pages import permissions
 from pages.models import Page, Tag, Post, Like
@@ -26,6 +28,10 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
 
     queryset = Page.objects.all()
     default_serializer_class = page_serializers.PageSerializer
+
+    filter_backends = (DjangoFilterBackend,)
+    search_fields = ('uuid', 'name', 'tags__name',)
+    filterset_class = PageFilter
 
     serializer_classes_by_action = {
         'block': page_serializers.BlockPageSerializer,
@@ -65,7 +71,7 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         return Response(status=HTTP_200_OK, data=response_data)
 
     def get_queryset(self):
-        if self.action == 'list' and self.requset.user == 'user':
+        if self.action == 'list' and self.request.user == 'user':
             return Page.objects.filter(owner=self.request.user)
 
         return self.queryset
@@ -111,7 +117,7 @@ class PostsViewSet(SerializersPermissionsBaseViewSet):
         create_post(user=self.request.user, serialized_post=serializer.validated_data)
 
     def get_queryset(self):
-        if self.action == 'list' and self.requset.user == 'user':
+        if self.action == 'list' and self.request.user == 'user':
             return Post.objects.filter(page__owner=self.request.user)
 
         return self.queryset
@@ -139,7 +145,7 @@ class LikeViewSet(SerializersPermissionsBaseViewSet):
         create_like(user=self.request.user, post=serializer.validated_data.get('post'))
 
     def get_queryset(self):
-        if self.action == 'list' and self.requset.user == 'user':
+        if self.action == 'list' and self.request.user == 'user':
             return Like.objects.filter(owner=self.request.user)
 
         return self.queryset
