@@ -57,7 +57,7 @@ def add_follower(page_to_follow: Page, follower: User) -> None:
 
 
 def delete_follower(followed_page: Page, follower: User) -> None:
-    if follower in followed_page.followers:
+    if follower in followed_page.followers.all():
         followed_page.followers.remove(follower)
 
 
@@ -67,5 +67,33 @@ def add_follow_request(page_to_follow: Page, follower: User) -> None:
 
 
 def delete_follow_request(page_to_follow: Page, follower: User) -> None:
-    if follower in page_to_follow.follow_requests:
+    if follower in page_to_follow.follow_requests.all():
         page_to_follow.follow_requests.remove(follower)
+
+
+def _accept_request(page: Page, user: User):
+    add_follower(page, user)
+    delete_follow_request(page, user)
+
+
+def accept_follow_request(page: Page, one=False, user_id=None):
+    if not one:
+        for request in page.follow_requests.all():
+            _accept_request(page=page, user=request)
+    else:
+        user = User.objects.filter(id=user_id).first()
+        if user:
+            _accept_request(page=page, user=user)
+
+    page.save()
+
+
+def reject_follow_request(page: Page, one=False, user_id=None):
+    if not one:
+        for request in page.follow_requests.all():
+            delete_follow_request(page=page, follower=request)
+    else:
+        user = User.objects.filter(id=user_id).first()
+        if user:
+            delete_follow_request(page=page, follower=user)
+    page.save()
