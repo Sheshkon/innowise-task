@@ -8,7 +8,7 @@ User = get_user_model()
 
 
 def is_not_blocked(unblock_date):
-    not unblock_date or unblock_date < datetime.now()
+    return not unblock_date or unblock_date < datetime.now()
 
 
 def block_page(page: Page, is_to_permanent=False):
@@ -43,8 +43,12 @@ def create_post(user: User, serialized_post):
 
 
 def _is_followed_page(page: Page, follower: User) -> bool:
-    return page.owner != follower and not page.is_private and not page.is_permanent_blocked \
-           and is_not_blocked(page.unblock_date)
+    if page.owner == follower:
+        return False
+    if page.is_private:
+        return False
+
+    return is_not_blocked(page.unblock_date) and not page.is_permanent_blocked
 
 
 def add_follower(page_to_follow: Page, follower: User) -> None:
