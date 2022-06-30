@@ -29,6 +29,7 @@ uritemplate = "4.1.1"
 urllib3 = "1.26.9"
 psycopg2-binary = "^2.9.3"
 django-cors-headers = "^3.13.0"
+django-filter = "^22.1"
 
 [tool.poetry.dev-dependencies]
 
