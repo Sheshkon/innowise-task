@@ -16,6 +16,8 @@ from pages.services import (
     create_post,
     add_follower,
     delete_follower,
+    add_follow_request,
+    delete_follow_request,
 )
 
 from pages.serializers import (
@@ -52,6 +54,8 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
         'follow': (IsNotAnonymous, IsNotBlocked,),
         'unfollow': (IsNotAnonymous, IsNotBlocked,),
+        'send_follow_request': (IsNotAnonymous, IsNotBlocked,),
+        'unsend_follow_request': (IsNotAnonymous, IsNotBlocked,),
         'block': (IsAdmin | IsModerator,),
     }
 
@@ -81,6 +85,14 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
     @action(detail=True, methods=('patch',))
     def unfollow(self, request, pk=None):
         delete_follower(followed_page=self.get_object(), follower=self.request.user)
+
+    @action(detail=True, methods=('patch',))
+    def send_follow_request(self, request, pk=None):
+        add_follow_request(page_to_follow=self.get_object(), follower=self.request.user)
+
+    @action(detail=True, methods=('patch',))
+    def unsend_follow_request(self, request, pk=None):
+        delete_follow_request(followed_page=self.get_object(), follower=self.request.user)
 
     def get_queryset(self):
         if self.action == 'list' and self.request.user == 'user':
