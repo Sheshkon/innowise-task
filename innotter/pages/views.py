@@ -18,6 +18,8 @@ from pages.services import (
     delete_follower,
     add_follow_request,
     delete_follow_request,
+    accept_follow_request,
+    reject_follow_request,
 )
 
 from pages.serializers import (
@@ -44,6 +46,8 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         'retrieve': page_serializers.RetrievePageSerializer,
         'list': page_serializers.ListPageSerializer,
         'list_follow_request': page_serializers.ListFollowRequestSerializer,
+        'accept_followers': page_serializers.AcceptOrRejectRequestSerializer,
+        'reject_followers': page_serializers.AcceptOrRejectRequestSerializer,
     }
 
     permission_classes_by_action = {
@@ -57,6 +61,8 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         'unfollow': (IsNotAnonymous, IsNotBlocked,),
         'send_follow_request': (IsNotAnonymous, IsNotBlocked,),
         'unsend_follow_request': (IsNotAnonymous, IsNotBlocked,),
+        'accept_followers': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
+        'reject_followers': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
         'list_follow_request': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
         'block': (IsAdmin | IsModerator,),
     }
@@ -100,6 +106,22 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
     def list_follow_request(self, request, pk=None):
         serializer = self.get_serializer(self.get_object())
         return Response(serializer.data)
+
+    @action(detail=True, methods=('patch', ))
+    def accept_followers(self, request, pk=None):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        one = serializer.validated_data['one']
+        user_id = serializer.validated_data.get('user_id', None)
+        accept_follow_request(page=self.get_object(), one=one, user_id=user_id)
+
+    @action(detail=True, methods=('patch',))
+    def reject_followers(self, request, pk=None):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        one = serializer.validated_data['one']
+        user_id = serializer.validated_data.get('user_id', None)
+        reject_follow_request(page=self.get_object(), one=one, user_id=user_id)
 
     def get_queryset(self):
         if self.action == 'list' and self.request.user == 'user':
