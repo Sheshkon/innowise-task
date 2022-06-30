@@ -4,9 +4,6 @@ from pages import models
 
 
 class BasePermissionPage(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
 
     def has_object_permission(self, request, view, obj):
         match type(obj):
@@ -25,25 +22,30 @@ class BasePermissionPage(permissions.BasePermission):
 class IsOwnerOrReadOnly(BasePermissionPage):
     @staticmethod
     def _has_page_object_permission(request, view, page: models.Page):
+        if request.method in permissions.SAFE_METHODS:
+            return True
         return request.user == page.owner
 
     @staticmethod
     def _has_post_object_permission(request, view, post: models.Post):
+        if request.method in permissions.SAFE_METHODS:
+            return True
         return request.user == post.page.owner
 
     @staticmethod
     def _has_tag_object_permission(request, view, tag: models.Tag):
+        if request.method in permissions.SAFE_METHODS:
+            return True
         return False
 
     @staticmethod
     def _has_like_object_permission(request, view, like: models.Like):
+        if request.method in permissions.SAFE_METHODS:
+            return True
         return request.user == like.owner
 
 
 class IsNotBlockedPage(BasePermissionPage):
-    @staticmethod
-    def _has_page_object_permission(request, view, page: models.Page):
-        return not page.owner.is_blocked
 
     @staticmethod
     def _has_post_object_permission(request, view, post: models.Post):
