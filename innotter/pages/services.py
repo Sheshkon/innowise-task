@@ -42,9 +42,13 @@ def create_post(user: User, serialized_post):
         Post.objects.create(page=page, content=content)
 
 
+def _is_followed_page(page: Page, follower: User) -> bool:
+    return page.owner != follower and not page.is_private and not page.is_permanent_blocked \
+           and is_not_blocked(page.unblock_date)
+
+
 def add_follower(page_to_follow: Page, follower: User) -> None:
-    if page_to_follow.owner != follower and not page_to_follow.is_private and not page_to_follow.is_permanent_blocked \
-            and is_not_blocked(page_to_follow.unblock_date):
+    if _is_followed_page(page_to_follow, follower):
         page_to_follow.followers.add(follower)
 
 
@@ -52,3 +56,12 @@ def delete_follower(followed_page: Page, follower: User) -> None:
     if follower in followed_page.followers:
         followed_page.followers.remove(follower)
 
+
+def add_follow_request(page_to_follow: Page, follower: User) -> None:
+    if _is_followed_page(page_to_follow, follower):
+        page_to_follow.follow_requests.add(follower)
+
+
+def delete_follow_request(page_to_follow: Page, follower: User) -> None:
+    if follower in page_to_follow.follow_requests:
+        page_to_follow.follow_requests.remove(follower)
