@@ -43,19 +43,21 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         'update': page_serializers.UpdatePageSerializer,
         'retrieve': page_serializers.RetrievePageSerializer,
         'list': page_serializers.ListPageSerializer,
+        'list_follow_request': page_serializers.ListFollowRequestSerializer,
     }
 
     permission_classes_by_action = {
         'create': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
         'update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
         'partial_update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
-        'retrieve': (AllowAny, permissions.IsNotPrivatePage, permissions.IsOwnerOrReadOnly),
+        'retrieve': (AllowAny, permissions.IsNotPrivatePage, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
         'list': (AllowAny,),
         'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
         'follow': (IsNotAnonymous, IsNotBlocked,),
         'unfollow': (IsNotAnonymous, IsNotBlocked,),
         'send_follow_request': (IsNotAnonymous, IsNotBlocked,),
         'unsend_follow_request': (IsNotAnonymous, IsNotBlocked,),
+        'list_follow_request': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
         'block': (IsAdmin | IsModerator,),
     }
 
@@ -93,6 +95,11 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
     @action(detail=True, methods=('patch',))
     def unsend_follow_request(self, request, pk=None):
         delete_follow_request(followed_page=self.get_object(), follower=self.request.user)
+
+    @action(detail=True, methods=('get',))
+    def list_follow_request(self, request, pk=None):
+        serializer = self.get_serializer(self.get_object())
+        return Response(serializer.data)
 
     def get_queryset(self):
         if self.action == 'list' and self.request.user == 'user':
