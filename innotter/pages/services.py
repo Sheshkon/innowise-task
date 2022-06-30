@@ -41,3 +41,14 @@ def create_post(user: User, serialized_post):
     else:
         Post.objects.create(page=page, content=content)
 
+
+def add_follower(page_to_follow: Page, follower: User) -> None:
+    if page_to_follow.owner != follower and not page_to_follow.is_private and not page_to_follow.is_permanent_blocked \
+            and is_not_blocked(page_to_follow.unblock_date):
+        page_to_follow.followers.add(follower)
+
+
+def delete_follower(followed_page: Page, follower: User) -> None:
+    if follower in followed_page.followers:
+        followed_page.followers.remove(follower)
+
