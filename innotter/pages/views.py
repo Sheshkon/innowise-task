@@ -14,6 +14,8 @@ from pages.services import (
     block_page,
     create_like,
     create_post,
+    add_follower,
+    delete_follower,
 )
 
 from pages.serializers import (
@@ -48,6 +50,8 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         'retrieve': (AllowAny, permissions.IsNotPrivatePage, permissions.IsOwnerOrReadOnly),
         'list': (AllowAny,),
         'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'follow': (IsNotAnonymous, IsNotBlocked,),
+        'unfollow': (IsNotAnonymous, IsNotBlocked,),
         'block': (IsAdmin | IsModerator,),
     }
 
@@ -69,6 +73,14 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
             'unblock_date': page.unblock_date,
         }
         return Response(status=HTTP_200_OK, data=response_data)
+
+    @action(detail=True, methods=('patch',))
+    def follow(self, request, pk=None):
+        add_follower(page_to_follow=self.get_object(), follower=self.request.user)
+
+    @action(detail=True, methods=('patch',))
+    def unfollow(self, request, pk=None):
+        delete_follower(followed_page=self.get_object(), follower=self.request.user)
 
     def get_queryset(self):
         if self.action == 'list' and self.request.user == 'user':
