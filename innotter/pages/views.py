@@ -20,6 +20,8 @@ from pages.services import (
     delete_follow_request,
     accept_follow_request,
     reject_follow_request,
+    add_tags_to_page,
+    delete_tags_from_page,
 )
 
 from pages.serializers import (
@@ -48,6 +50,8 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         'list_follow_request': page_serializers.ListFollowRequestSerializer,
         'accept_followers': page_serializers.AcceptOrRejectRequestSerializer,
         'reject_followers': page_serializers.AcceptOrRejectRequestSerializer,
+        'add_tags': page_serializers.TagsToPageSerializer,
+        'delete_tags': page_serializers.TagsToPageSerializer,
     }
 
     permission_classes_by_action = {
@@ -65,15 +69,25 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         'reject_followers': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
         'list_follow_request': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
         'block': (IsAdmin | IsModerator,),
+        'add_tags': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
+        'delete_tags': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
     }
 
     @action(detail=True, methods=('patch',))
     def add_tags(self, request, pk=None):
-        pass
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        tags_names = serializer.validated_data.get('list_tag_names')
+        page = self.get_object()
+        add_tags_to_page(page=page, tags_names=tags_names)
 
     @action(detail=True, methods=('patch',))
     def delete_tags(self, request, pk=None):
-        pass
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        tags_names = serializer.validated_data.get('list_tag_names')
+        page = self.get_object()
+        delete_tags_from_page(page=page, tags_names=tags_names)
 
     @action(detail=True, methods=('patch',))
     def block(self, request, pk=None):
