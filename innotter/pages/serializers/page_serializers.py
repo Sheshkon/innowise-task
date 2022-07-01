@@ -54,5 +54,19 @@ class TagsToPageSerializer(BasePageSerializer):
 
     class Meta(BasePageSerializer.Meta):
         fields = ('id', 'tags', 'list_tag_names',)
-        read_only_fields =('tags',)
+        read_only_fields = ('tags',)
 
+
+class ListFollowRequestSerializer(BasePageSerializer):
+    follow_requests = serializers.SlugRelatedField(slug_field='username', many=True, read_only=True)
+
+    class Meta(BasePageSerializer.Meta):
+        fields = ('id', 'name', 'owner', 'follow_requests')
+
+
+class AcceptOrRejectRequestSerializer(BasePageSerializer):
+    one = serializers.BooleanField(default=False)
+    user_id = serializers.CharField(required=False, write_only=True)
+
+    class Meta(BasePageSerializer.Meta):
+        fields = ('id', 'one', 'user_id')
