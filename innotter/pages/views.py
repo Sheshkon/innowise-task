@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -138,7 +141,7 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         reject_follow_request(page=self.get_object(), one=one, user_id=user_id)
 
     def get_queryset(self):
-        if self.action == 'list' and self.request.user == 'user':
+        if self.action == 'list' and self.request.user.role == 'user':
             return Page.objects.filter(owner=self.request.user)
 
         return self.queryset
@@ -171,6 +174,7 @@ class PostsViewSet(SerializersPermissionsBaseViewSet):
         'retrieve': (AllowAny,),
         'list': (AllowAny,),
         'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'news': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly)
     }
 
     serializer_classes_by_action = {
@@ -178,14 +182,30 @@ class PostsViewSet(SerializersPermissionsBaseViewSet):
         'update': post_serializers.UpdatePostSerializer,
         'list': post_serializers.RetrievePostSerializer,
         'retrieve': post_serializers.RetrievePostSerializer,
+        'news': post_serializers.RetrievePostSerializer,
     }
+
+    @action(detail=False, methods=('get',))
+    def news(self, request):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         create_post(user=self.request.user, serialized_post=serializer.validated_data)
 
     def get_queryset(self):
-        if self.action == 'list' and self.request.user == 'user':
-            return Post.objects.filter(page__owner=self.request.user)
+        if self.request.user.role == 'user':
+            match self.action:
+                case 'list':
+                    return Post.objects.filter(page__owner=self.request.user)
+                case 'news':
+                    return Post.objects.filter(
+                        Q(page__is_permanent_blocked=False) &
+                        Q(page__owner__is_blocked=False) &
+                        (Q(page__unblock_date__isnull=True) | Q(page__unblock_date__lt=datetime.now())) &
+                        (Q(page__owner=self.request.user) | Q(page__followers__in=(self.request.user,)))
+                    ).order_by('-updated_at', '-created_at')
 
         return self.queryset
 
@@ -212,7 +232,7 @@ class LikeViewSet(SerializersPermissionsBaseViewSet):
         create_like(user=self.request.user, post=serializer.validated_data.get('post'))
 
     def get_queryset(self):
-        if self.action == 'list' and self.request.user == 'user':
+        if self.action == 'list' and self.request.user.role == 'user':
             return Like.objects.filter(owner=self.request.user)
 
         return self.queryset
