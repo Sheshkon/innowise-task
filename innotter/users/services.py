@@ -72,6 +72,9 @@ def check_user_refresh_token(request):
     return user
 
 
-def block_user(user: User):
+def block_user(user: User) -> None:
     user.is_blocked = True
+    for page in user.pages.all():
+        page.is_permanent_blocked = True
+        page.save()
     user.save()

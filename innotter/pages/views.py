@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -20,6 +23,8 @@ from pages.services import (
     delete_follow_request,
     accept_follow_request,
     reject_follow_request,
+    add_tags_to_page,
+    delete_tags_from_page,
 )
 
 from pages.serializers import (
@@ -48,6 +53,8 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         'list_follow_request': page_serializers.ListFollowRequestSerializer,
         'accept_followers': page_serializers.AcceptOrRejectRequestSerializer,
         'reject_followers': page_serializers.AcceptOrRejectRequestSerializer,
+        'add_tags': page_serializers.TagsToPageSerializer,
+        'delete_tags': page_serializers.TagsToPageSerializer,
     }
 
     permission_classes_by_action = {
@@ -65,15 +72,25 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         'reject_followers': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
         'list_follow_request': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
         'block': (IsAdmin | IsModerator,),
+        'add_tags': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
+        'delete_tags': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
     }
 
     @action(detail=True, methods=('patch',))
     def add_tags(self, request, pk=None):
-        pass
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        tags_names = serializer.validated_data.get('list_tag_names')
+        page = self.get_object()
+        add_tags_to_page(page=page, tags_names=tags_names)
 
     @action(detail=True, methods=('patch',))
     def delete_tags(self, request, pk=None):
-        pass
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        tags_names = serializer.validated_data.get('list_tag_names')
+        page = self.get_object()
+        delete_tags_from_page(page=page, tags_names=tags_names)
 
     @action(detail=True, methods=('patch',))
     def block(self, request, pk=None):
@@ -124,7 +141,7 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         reject_follow_request(page=self.get_object(), one=one, user_id=user_id)
 
     def get_queryset(self):
-        if self.action == 'list' and self.request.user == 'user':
+        if self.action == 'list' and self.request.user.role == 'user':
             return Page.objects.filter(owner=self.request.user)
 
         return self.queryset
@@ -157,6 +174,7 @@ class PostsViewSet(SerializersPermissionsBaseViewSet):
         'retrieve': (AllowAny,),
         'list': (AllowAny,),
         'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'news': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly)
     }
 
     serializer_classes_by_action = {
@@ -164,14 +182,30 @@ class PostsViewSet(SerializersPermissionsBaseViewSet):
         'update': post_serializers.UpdatePostSerializer,
         'list': post_serializers.RetrievePostSerializer,
         'retrieve': post_serializers.RetrievePostSerializer,
+        'news': post_serializers.RetrievePostSerializer,
     }
+
+    @action(detail=False, methods=('get',))
+    def news(self, request):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         create_post(user=self.request.user, serialized_post=serializer.validated_data)
 
     def get_queryset(self):
-        if self.action == 'list' and self.request.user == 'user':
-            return Post.objects.filter(page__owner=self.request.user)
+        if self.request.user.role == 'user':
+            match self.action:
+                case 'list':
+                    return Post.objects.filter(page__owner=self.request.user)
+                case 'news':
+                    return Post.objects.filter(
+                        Q(page__is_permanent_blocked=False) &
+                        Q(page__owner__is_blocked=False) &
+                        (Q(page__unblock_date__isnull=True) | Q(page__unblock_date__lt=datetime.now())) &
+                        (Q(page__owner=self.request.user) | Q(page__followers__in=(self.request.user,)))
+                    ).order_by('-updated_at', '-created_at')
 
         return self.queryset
 
@@ -198,7 +232,7 @@ class LikeViewSet(SerializersPermissionsBaseViewSet):
         create_like(user=self.request.user, post=serializer.validated_data.get('post'))
 
     def get_queryset(self):
-        if self.action == 'list' and self.request.user == 'user':
+        if self.action == 'list' and self.request.user.role == 'user':
             return Like.objects.filter(owner=self.request.user)
 
         return self.queryset
