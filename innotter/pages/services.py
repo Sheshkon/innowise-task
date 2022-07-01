@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from django.contrib.auth import get_user_model
 
 from innotter.settings import BLOCK_DAYS
-from pages.models import Like, Post, Page
+from pages.models import Like, Post, Page, Tag
 
 User = get_user_model()
 
@@ -97,3 +97,13 @@ def reject_follow_request(page: Page, one=False, user_id=None):
         if user:
             delete_follow_request(page=page, follower=user)
     page.save()
+
+
+def add_tags_to_page(page: Page, tags_names: set) -> None:
+    for tag in Tag.objects.filter(name__in=tags_names):
+        page.tags.add(tag)
+
+
+def delete_tags_from_page(page: Page, tags_names: set) -> None:
+    for tag in Tag.objects.filter(name__in=tags_names):
+        page.tags.remove(tag)
