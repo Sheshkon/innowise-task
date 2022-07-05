@@ -34,6 +34,7 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
     serializer_classes_by_action = {
         'create': serializers.CreateUserSerializer,
         'update': serializers.UpdateUserSerializer,
+        'partial_update': serializers.UpdateUserSerializer,
         'list': serializers.RetrieveUserSerializer,
         'retrieve': serializers.RetrieveUserSerializer,
         'register': serializers.RegistrationSerializer,
@@ -93,4 +94,3 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
     def block(self, request, pk=None):
         block_user(user=self.get_object())
         return Response(status=HTTP_200_OK)
-
