@@ -23,7 +23,7 @@ class CreateUserSerializer(BaseUserSerializer):
 
 class UpdateUserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
-        fields = ('id', 'is_active', 'role', 'is_blocked')
+        fields = ('id', 'is_active', 'role', 'is_blocked', 'username')
 
 
 class UpdateUserInfoSerializer(BaseUserSerializer):
