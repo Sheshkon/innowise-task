@@ -152,7 +152,7 @@ CORS_ORIGIN_WHITELIST = [
 ]
 
 BLOCK_DAYS = 7
-JWT_WHITELIST = ('users-list',
+JWT_WHITELIST = (
                  'users-login-user',
                  'users-refresh-token',
                  'users-register')
