@@ -1,5 +1,6 @@
 from django.urls import resolve
 from django.utils.deprecation import MiddlewareMixin
+from django.http import HttpResponseForbidden
 
 from innotter.settings import JWT_WHITELIST
 from users.authentication import SafeJWTAuthentication
@@ -15,8 +16,12 @@ class AuthMiddleware(MiddlewareMixin):
         if self.check_is_in_whitelist(request):
             return self.get_response(request)
 
-        jwt_auth = SafeJWTAuthentication().authenticate(request)
-        request.user = jwt_auth[0]
+        try:
+            jwt_auth = SafeJWTAuthentication().authenticate(request)
+            request.user = jwt_auth[0]
+        except Exception as e:
+            return HttpResponseForbidden(e)
+
         return self.get_response(request)
 
     @staticmethod
