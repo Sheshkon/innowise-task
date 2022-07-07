@@ -1,28 +1,30 @@
 from rest_framework import permissions
 
 
-class IsNotAnonymous(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        return not request.user.is_anonymous
-
-
 class IsAdmin(permissions.BasePermission):
 
-    def has_permission(self, request, view):
+    @staticmethod
+    def _is_admin(request):
         return request.user.is_staff or request.user.role == request.user.Roles.ADMIN.value
+
+    def has_permission(self, request, view):
+        return self._is_admin(request)
+
+    def has_object_permission(self, request, view, obj):
+        return self._is_admin(request)
 
 
 class IsModerator(permissions.BasePermission):
 
-    def has_permission(self, request, view):
+    @staticmethod
+    def _is_moderator(request):
         return request.user.role == request.user.Roles.MODERATOR.value
 
-
-class IsUser(permissions.BasePermission):
-
     def has_permission(self, request, view):
-        return request.user.role == request.user.Roles.MODERATOR
+        return self._is_moderator(request)
+
+    def has_object_permission(self, request, view, obj):
+        return self._is_moderator(request)
 
 
 class IsNotBlocked(permissions.BasePermission):

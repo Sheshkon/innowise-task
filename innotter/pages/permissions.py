@@ -52,10 +52,6 @@ class IsNotBlockedPage(BasePermissionPage):
         return not post.page.owner.is_blocked
 
     @staticmethod
-    def _has_tag_object_permission(request, view, tag: models.Tag):
-        return False
-
-    @staticmethod
     def _has_like_object_permission(request, view, like: models.Like):
         return not like.post.page.owner.is_blocked
 
