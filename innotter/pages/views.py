@@ -5,11 +5,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from innotter.views import SerializersPermissionsBaseViewSet
 from pages.filters import PageFilter
-from users.permissions import IsAdmin, IsModerator, IsNotAnonymous, IsNotBlocked
+from users.permissions import IsAdmin, IsModerator, IsNotBlocked
 from pages import permissions
 from pages.models import Page, Tag, Post, Like
 
@@ -58,22 +58,22 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
     }
 
     permission_classes_by_action = {
-        'create': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
-        'update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
-        'partial_update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'create': (IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'update': (IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'partial_update': (IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
         'retrieve': (AllowAny, permissions.IsNotPrivatePage, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
         'list': (AllowAny,),
-        'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
-        'follow': (IsNotAnonymous, IsNotBlocked,),
-        'unfollow': (IsNotAnonymous, IsNotBlocked,),
-        'send_follow_request': (IsNotAnonymous, IsNotBlocked,),
-        'unsend_follow_request': (IsNotAnonymous, IsNotBlocked,),
-        'accept_followers': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
-        'reject_followers': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
-        'list_follow_request': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
+        'destroy': (IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'follow': (IsNotBlocked,),
+        'unfollow': (IsNotBlocked,),
+        'send_follow_request': (IsNotBlocked,),
+        'unsend_follow_request': (IsNotBlocked,),
+        'accept_followers': (IsNotBlocked, permissions.IsOwnerOrReadOnly,),
+        'reject_followers': (IsNotBlocked, permissions.IsOwnerOrReadOnly,),
+        'list_follow_request': (IsNotBlocked, permissions.IsOwnerOrReadOnly,),
         'block': (IsAdmin | IsModerator,),
-        'add_tags': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
-        'delete_tags': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly,),
+        'add_tags': (IsNotBlocked, permissions.IsOwnerOrReadOnly,),
+        'delete_tags': (IsNotBlocked, permissions.IsOwnerOrReadOnly,),
     }
 
     @action(detail=True, methods=('patch',))
@@ -83,6 +83,8 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         tags_names = serializer.validated_data.get('list_tag_names')
         page = self.get_object()
         add_tags_to_page(page=page, tags_names=tags_names)
+        page_data = page_serializers.RetrievePageSerializer(page).data
+        return Response(status=HTTP_200_OK, data=page_data)
 
     @action(detail=True, methods=('patch',))
     def delete_tags(self, request, pk=None):
@@ -91,6 +93,8 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         tags_names = serializer.validated_data.get('list_tag_names')
         page = self.get_object()
         delete_tags_from_page(page=page, tags_names=tags_names)
+        page_data = page_serializers.RetrievePageSerializer(page).data
+        return Response(status=HTTP_200_OK, data=page_data)
 
     @action(detail=True, methods=('patch',))
     def block(self, request, pk=None):
@@ -100,24 +104,37 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         response_data = {
             'id': page.id,
             'unblock_date': page.unblock_date,
+            'is_permanent_blocked': page.is_permanent_blocked
         }
         return Response(status=HTTP_200_OK, data=response_data)
 
     @action(detail=True, methods=('patch',))
     def follow(self, request, pk=None):
-        add_follower(page_to_follow=self.get_object(), follower=self.request.user)
+        if add_follower(page_to_follow=self.get_object(), follower=self.request.user):
+            return Response(status=HTTP_200_OK)
+
+        return Response(status=HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=('patch',))
     def unfollow(self, request, pk=None):
-        delete_follower(followed_page=self.get_object(), follower=self.request.user)
+        if delete_follower(followed_page=self.get_object(), follower=self.request.user):
+            return Response(status=HTTP_200_OK)
+
+        return Response(status=HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=('patch',))
     def send_follow_request(self, request, pk=None):
-        add_follow_request(page_to_follow=self.get_object(), follower=self.request.user)
+        if add_follow_request(page_to_follow=self.get_object(), follower=self.request.user):
+            return Response(status=HTTP_200_OK)
+
+        return Response(status=HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=('patch',))
     def unsend_follow_request(self, request, pk=None):
-        delete_follow_request(followed_page=self.get_object(), follower=self.request.user)
+        if delete_follow_request(followed_page=self.get_object(), follower=self.request.user):
+            return Response(status=HTTP_200_OK)
+
+        return Response(status=HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=('get',))
     def list_follow_request(self, request, pk=None):
@@ -131,6 +148,7 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         one = serializer.validated_data['one']
         user_id = serializer.validated_data.get('user_id', None)
         accept_follow_request(page=self.get_object(), one=one, user_id=user_id)
+        return Response(status=HTTP_200_OK)
 
     @action(detail=True, methods=('patch',))
     def reject_followers(self, request, pk=None):
@@ -139,6 +157,7 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         one = serializer.validated_data['one']
         user_id = serializer.validated_data.get('user_id', None)
         reject_follow_request(page=self.get_object(), one=one, user_id=user_id)
+        return Response(status=HTTP_200_OK)
 
     def get_queryset(self):
         if self.action == 'list' and self.request.user.role == 'user':
@@ -153,12 +172,12 @@ class TagsViewSet(SerializersPermissionsBaseViewSet):
     default_serializer_class = tag_serializers.TagSerializer
 
     permission_classes_by_action = {
-        'create': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
-        'update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
-        'partial_update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
-        'retrieve': (AllowAny, permissions.IsNotPrivatePage),
-        'list': (AllowAny, permissions.IsNotPrivatePage),
-        'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'create': (IsNotBlocked,  IsAdmin | IsModerator,),
+        'update': (IsNotBlocked, IsAdmin | IsModerator,),
+        'partial_update': (IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'retrieve': (permissions.IsOwnerOrReadOnly,),
+        'list': (permissions.IsOwnerOrReadOnly,),
+        'destroy': (IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
     }
 
 
@@ -168,13 +187,13 @@ class PostsViewSet(SerializersPermissionsBaseViewSet):
     default_serializer_class = post_serializers.PostSerializer
 
     permission_classes_by_action = {
-        'create': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
-        'update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
-        'partial_update': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'create': (IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'update': (IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'partial_update': (IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
         'retrieve': (AllowAny,),
         'list': (AllowAny,),
-        'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
-        'news': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly)
+        'destroy': (IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'news': (IsNotBlocked, permissions.IsOwnerOrReadOnly)
     }
 
     serializer_classes_by_action = {
@@ -216,9 +235,9 @@ class LikeViewSet(SerializersPermissionsBaseViewSet):
     default_serializer_class = like_serializer.LikeSerializer
 
     permission_classes_by_action = {
-        'create': (IsNotAnonymous, IsNotBlocked, IsAdmin | IsModerator,),
+        'create': (IsNotBlocked,),
         'retrieve': (AllowAny,),
-        'destroy': (IsNotAnonymous, IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin | IsModerator,),
+        'destroy': (IsNotBlocked, permissions.IsOwnerOrReadOnly | IsAdmin,),
         'list': (AllowAny,),
     }
 
