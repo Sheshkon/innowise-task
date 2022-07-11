@@ -10,7 +10,7 @@ from rest_framework.status import HTTP_200_OK
 
 from innotter.views import SerializersPermissionsBaseViewSet
 from users import serializers
-from users.permissions import IsAdmin, IsModerator, IsNotAnonymous, IsNotBlocked
+from users.permissions import IsAdmin, IsModerator, IsNotBlocked
 
 from users.services import (
     generate_refresh_token,
@@ -42,16 +42,16 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
     }
 
     permission_classes_by_action = {
-        'create': (IsNotAnonymous, IsAdmin | IsModerator,),
-        'update': (IsNotAnonymous, IsNotBlocked, IsAdmin | IsModerator,),
-        'partial_update': (IsNotAnonymous, IsNotBlocked, IsAdmin | IsModerator,),
+        'create': (IsAdmin | IsModerator,),
+        'update': (IsNotBlocked, IsAdmin | IsModerator,),
+        'partial_update': (IsNotBlocked, IsAdmin | IsModerator,),
         'retrieve': (IsAuthenticated,),
         'list': (IsAuthenticated,),
-        'destroy': (IsNotAnonymous, IsNotBlocked, IsAdmin,),
+        'destroy': (IsNotBlocked, IsAdmin,),
         'register': (AllowAny,),
         'login_user': (AllowAny,),
         'refresh_token': (AllowAny,),
-        'block': (IsNotAnonymous, IsNotBlocked, IsAdmin,)
+        'block': (IsNotBlocked, IsAdmin,)
     }
 
     @method_decorator(ensure_csrf_cookie)
