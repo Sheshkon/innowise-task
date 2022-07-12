@@ -156,3 +156,12 @@ JWT_WHITELIST = (
                  'users-login-user',
                  'users-refresh-token',
                  'users-register')
+
+RABBITMQ_DEFAULT_USER = os.environ.get('RABBITMQ_DEFAULT_USER')
+RABBITMQ_DEFAULT_PASS = os.environ.get('RABBITMQ_DEFAULT_PASS')
+RABBITMQ_HOSTNAME = os.environ.get('RABBITMQ_HOSTNAME')
+
+CELERY_BROKER_URL = f'amqp://{RABBITMQ_DEFAULT_USER}:{RABBITMQ_DEFAULT_PASS}@{RABBITMQ_HOSTNAME}:5672/'
+CELERY_ACCEPT_CONTENT = ('application/json',)
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'

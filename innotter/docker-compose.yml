@@ -1,6 +1,14 @@
 version: '3.9'
 
 services:
+
+  rabbit:
+    hostname: ${RABBITMQ_HOSTNAME}
+    image: rabbitmq:3-management-alpine
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+
   web:
     build: .
     command: sh ./entrypoint.sh
@@ -12,6 +20,8 @@ services:
       - ./.env
     depends_on:
       - db
+      - rabbit
+
   db:
     image: postgres
     volumes:
@@ -20,5 +30,16 @@ services:
       - POSTGRES_DB=${POSTGRES_NAME}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_USER}
+
+  worker:
+    restart: always
+    build:
+      context: .
+    command: sh ./run_celery.sh
+    volumes:
+      - .:/code
+    depends_on:
+      - rabbit
+
 volumes:
   postgres_data:
