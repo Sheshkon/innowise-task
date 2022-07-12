@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 
 from innotter.settings import BLOCK_DAYS
 from pages.models import Like, Post, Page, Tag
+from pages.tasks import notify_followers
 
 User = get_user_model()
 
@@ -40,6 +41,9 @@ def create_post(user: User, serialized_post):
         Post.objects.create(page=page, content=content, reply_to=reply_to)
     else:
         Post.objects.create(page=page, content=content)
+
+    followers = [follower.email for follower in page.followers.all()]
+    notify_followers(post_owner=page.owner, followers=followers)
 
 
 def _is_followed_page(page: Page, follower: User) -> bool:
