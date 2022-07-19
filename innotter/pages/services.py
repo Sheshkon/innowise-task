@@ -42,8 +42,8 @@ def create_post(user: User, serialized_post):
     else:
         Post.objects.create(page=page, content=content)
 
-    followers = [follower.email for follower in page.followers.all()]
-    notify_followers(post_owner=page.owner, followers=followers)
+    followers_emails = [follower.email for follower in page.followers.all()]
+    notify_followers.delay(post_owner=page.owner.email, followers_emails=followers_emails)
 
 
 def _is_followed_page(page: Page, follower: User) -> bool:
