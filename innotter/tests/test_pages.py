@@ -115,13 +115,13 @@ class TestLikes:
 
 class TestPosts:
     @pytest.mark.django_db
-    def test_create_post(self, auth_user_client, user_page):
+    def test_create_post(self, auth_user_client, user_page, mocker):
         url = reverse('posts-list', )
         payload = {
             'page': user_page.pk,
             'content': 'test content',
         }
-
+        mocker.patch('pages.tasks.notify_followers.delay', return_value=True)
         response = auth_user_client.post(url, payload, format('json'))
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -354,3 +354,15 @@ class TestPages:
         assert admin not in user_private_page_with_follow_request.followers.all()
         assert admin not in user_private_page_with_follow_request.follow_requests.all()
 
+    @pytest.mark.django_db
+    def test_upload_profile_photo(self, auth_user_client, user_page, admin_page):
+        f = open('./tests/test.jpg', 'rb')
+
+        payload = {
+            "file": f
+        }
+        url = reverse('pages-detail', args=(user_page.pk,))
+        response = auth_user_client.patch(url, payload)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data.get('image')
