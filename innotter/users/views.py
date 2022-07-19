@@ -8,9 +8,10 @@ from rest_framework import status
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from rest_framework.status import HTTP_200_OK
 
+from innotter.aws_services import upload_file_to_s3
 from innotter.views import SerializersPermissionsBaseViewSet
 from users import serializers
-from users.permissions import IsAdmin, IsModerator, IsNotBlocked
+from users.permissions import IsAdmin, IsModerator, IsNotBlocked, IsOwner
 
 from users.services import (
     generate_refresh_token,
@@ -34,7 +35,7 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
     serializer_classes_by_action = {
         'create': serializers.CreateUserSerializer,
         'update': serializers.UpdateUserSerializer,
-        'partial_update': serializers.UpdateUserSerializer,
+        'partial_update': serializers.UpdateUserInfoSerializer,
         'list': serializers.RetrieveUserSerializer,
         'retrieve': serializers.RetrieveUserSerializer,
         'register': serializers.RegistrationSerializer,
@@ -44,7 +45,7 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
     permission_classes_by_action = {
         'create': (IsAdmin | IsModerator,),
         'update': (IsNotBlocked, IsAdmin | IsModerator,),
-        'partial_update': (IsNotBlocked, IsAdmin | IsModerator,),
+        'partial_update': (IsNotBlocked, IsAdmin | IsModerator | IsOwner),
         'retrieve': (IsAuthenticated,),
         'list': (IsAuthenticated,),
         'destroy': (IsNotBlocked, IsAdmin,),
@@ -94,3 +95,13 @@ class UsersViewSet(SerializersPermissionsBaseViewSet):
     def block(self, request, pk=None):
         block_user(user=self.get_object())
         return Response(status=HTTP_200_OK)
+
+    def perform_update(self, serializer):
+        image = self.request.FILES.get('file')
+        if image:
+            image_s3_path = upload_file_to_s3(
+                file_path=image,
+                key=f'{self.get_object().username}'
+            )
+            serializer.validated_data['image_s3_path'] = image_s3_path
+        serializer.save()
