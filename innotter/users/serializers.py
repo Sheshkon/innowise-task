@@ -1,12 +1,23 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from innotter.aws_services import get_presigned_url
+
 User = get_user_model()
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if not representation.get('image_s3_path'):
+            return representation
+
+        representation['image_s3_path'] = get_presigned_url(representation['image_s3_path'])
+
+        return representation
 
 
 class UserSerializer(BaseUserSerializer):
@@ -17,18 +28,20 @@ class UserSerializer(BaseUserSerializer):
 
 class CreateUserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
-        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'title',)
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'title', 'image_s3_path')
         extra_kwargs = {'password': {'write_only': True}}
 
 
 class UpdateUserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
-        fields = ('id', 'is_active', 'role', 'is_blocked', 'username')
+        fields = ('id', 'is_active', 'role', 'is_blocked', 'username', 'image_s3_path')
 
 
 class UpdateUserInfoSerializer(BaseUserSerializer):
+    file = serializers.FileField(allow_null=True, write_only=True)
+
     class Meta(BaseUserSerializer.Meta):
-        fields = ('id', 'username', 'email', 'image_s3_path')
+        fields = ('id', 'username', 'email', 'image_s3_path', 'file')
 
 
 class RetrieveUserSerializer(BaseUserSerializer):
