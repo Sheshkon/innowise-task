@@ -194,11 +194,9 @@ def test_admin_block_user(user, auth_admin_client):
 
 
 @pytest.mark.django_db
-def test_upload_profile_photo(user, auth_user_client):
-    f = open('./tests/test.jpg', 'rb')
-
+def test_upload_profile_photo(user, auth_user_client, image):
     payload = dict(
-        file=f,
+        file=image,
     )
     url = reverse('users-detail', args=(user.pk,))
     response = auth_user_client.patch(url, payload)

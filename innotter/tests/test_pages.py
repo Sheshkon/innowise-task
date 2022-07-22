@@ -355,11 +355,9 @@ class TestPages:
         assert admin not in user_private_page_with_follow_request.follow_requests.all()
 
     @pytest.mark.django_db
-    def test_upload_profile_photo(self, auth_user_client, user_page, admin_page):
-        f = open('./tests/test.jpg', 'rb')
-
+    def test_upload_profile_photo(self, auth_user_client, user_page, admin_page, image):
         payload = {
-            "file": f
+            "file": image
         }
         url = reverse('pages-detail', args=(user_page.pk,))
         response = auth_user_client.patch(url, payload)
