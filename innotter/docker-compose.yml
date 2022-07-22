@@ -25,6 +25,8 @@ services:
     depends_on:
       - db
       - rabbit
+      - localstack
+
 
   db:
     image: postgres
@@ -46,6 +48,7 @@ services:
       - .:/code
     depends_on:
       - rabbit
+      - localstack
 
   localstack:
     image: localstack/localstack:0.12.8
