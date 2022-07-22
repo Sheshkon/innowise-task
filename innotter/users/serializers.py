@@ -7,17 +7,13 @@ User = get_user_model()
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
+    image_s3_path = serializers.SerializerMethodField()
+
     class Meta:
         model = User
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        if not representation.get('image_s3_path'):
-            return representation
-
-        representation['image_s3_path'] = get_presigned_url(representation['image_s3_path'])
-
-        return representation
+    def get_image_s3_path(self, obj):
+        return get_presigned_url(obj.image_s3_path)
 
 
 class UserSerializer(BaseUserSerializer):

@@ -5,17 +5,13 @@ from pages.models import Page
 
 
 class BasePageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = Page
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        if not representation.get('image'):
-            return representation
-
-        representation['image'] = get_presigned_url(representation['image'])
-
-        return representation
+    def get_image(self, obj):
+        return get_presigned_url(obj.image)
 
 
 class PageSerializer(BasePageSerializer):
@@ -28,7 +24,7 @@ class BlockPageSerializer(BasePageSerializer):
 
     class Meta(BasePageSerializer.Meta):
         fields = ('is_to_permanent', 'unblock_date')
-        read_only_fields = ('unblock_date', )
+        read_only_fields = ('unblock_date',)
 
 
 class CreatePageSerializer(BasePageSerializer):
