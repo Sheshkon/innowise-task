@@ -33,6 +33,12 @@ django-filter = "^22.1"
 coverage = "^6.4.1"
 pytest = "^7.1.2"
 pytest-django = "^4.5.2"
+celery = "^5.2.7"
+pytest-mock = "^3.8.2"
+boto3 = "^1.24.29"
+awscli-local = "^0.20"
+awscli = "^1.25.31"
+Pillow = "^9.2.0"
 
 [tool.poetry.dev-dependencies]
 

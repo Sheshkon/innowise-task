@@ -1,6 +1,17 @@
 version: '3.9'
 
 services:
+
+  rabbit:
+    hostname: ${RABBITMQ_HOSTNAME}
+    image: rabbitmq:3-management-alpine
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - '5682:5672'
+      - '15682:15672'
+
   web:
     build: .
     command: sh ./entrypoint.sh
@@ -10,8 +21,13 @@ services:
       - 8000:8000
     env_file:
       - ./.env
+
     depends_on:
       - db
+      - rabbit
+      - localstack
+
+
   db:
     image: postgres
     volumes:
@@ -20,5 +36,32 @@ services:
       - POSTGRES_DB=${POSTGRES_NAME}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_USER}
-volumes:
-  postgres_data:
+
+  worker:
+    restart: always
+    build:
+      context: .
+    env_file:
+      - ./.env
+    command: sh ./run_celery.sh
+    volumes:
+      - .:/code
+    depends_on:
+      - rabbit
+      - localstack
+
+  localstack:
+    image: localstack/localstack:0.12.8
+    ports:
+      - '4566:4566'
+    environment:
+      - EDGE_PORT=4566
+      - SERVICES=lambda,s3,ses
+      - DATA_DIR=/tmp/localstack/data
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - DEBUG=1
+    volumes:
+      - ./aws:/docker-entrypoint-initaws.d
+      - ./localstack:/tmp/localstack/data

@@ -156,3 +156,25 @@ JWT_WHITELIST = (
                  'users-login-user',
                  'users-refresh-token',
                  'users-register')
+
+RABBITMQ_DEFAULT_USER = os.environ.get('RABBITMQ_DEFAULT_USER')
+RABBITMQ_DEFAULT_PASS = os.environ.get('RABBITMQ_DEFAULT_PASS')
+RABBITMQ_HOSTNAME = os.environ.get('RABBITMQ_HOSTNAME')
+
+CELERY_BROKER_URL = f'amqp://{RABBITMQ_DEFAULT_USER}:{RABBITMQ_DEFAULT_PASS}@{RABBITMQ_HOSTNAME}:5672/'
+CELERY_ACCEPT_CONTENT = ('application/json',)
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+
+AWS_DEFAULT_REGION = os.environ.get('AWS_DEFAULT_REGION')
+LOCALSTACK_ENDPOINT_URL = os.environ.get('LOCALSTACK_ENDPOINT_URL')
+
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_PROFILE = os.environ.get('AWS_PROFILE')
+
+S3_BUCKET = os.environ.get('S3_BUCKET')
+SOURCE_EMAIL = os.environ.get('SOURCE_EMAIL')
+ALLOWED_FILE_EXTENSIONS = ('jpeg', 'jpg', 'png',)
+

@@ -1,3 +1,6 @@
+from io import BytesIO
+from PIL import Image
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -181,6 +184,11 @@ def likes(user, admin, user_post):
             Like.objects.create(owner=admin, post=user_post))
 
 
-
-
-
+@pytest.fixture
+def image():
+    file = BytesIO()
+    image = Image.new('RGBA', size=(1, 1), color=(155, 0, 0))
+    image.save(file, 'png')
+    file.name = 'test.png'
+    file.seek(0)
+    return file

@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from users import serializers
+import os
 
 User = get_user_model()
 
@@ -73,21 +74,20 @@ def test_user_detail(auth_user_client, user):
 
 
 @pytest.mark.django_db
-def test_not_admin_user_patch(user, auth_user_client):
+def test_user_patch(user, auth_user_client):
     url = reverse('users-detail', args=(user.pk,))
-    response = auth_user_client.patch(url, {'role': 'admin'}, format='json')
+    response = auth_user_client.patch(url, {'username': 'new_user'}, format='json')
 
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.django_db
 def test_admin_user_patch(user, auth_admin_client):
     url = reverse('users-detail', args=(user.pk,))
-    response = auth_admin_client.patch(url, {'role': 'admin'}, format='json')
+    response = auth_admin_client.patch(url, {'username': 'new_user'}, format='json')
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.data['role'] == 'admin'
-    assert response.data['username'] == 'user'
+    assert response.data['username'] == 'new_user'
 
 
 @pytest.mark.django_db
@@ -154,6 +154,7 @@ def test_admin_update_user(user, auth_admin_client):
     url = reverse('users-detail', args=(user.pk,))
     prev_username = user.username
     response = auth_admin_client.put(url, payload)
+    user.refresh_from_db()
 
     assert response.status_code == status.HTTP_200_OK
     assert response.data.get('username') != prev_username
@@ -190,3 +191,15 @@ def test_admin_block_user(user, auth_admin_client):
     assert response.status_code == status.HTTP_200_OK
     blocked_user = User.objects.filter(pk=user.pk).first()
     assert blocked_user.is_blocked is True
+
+
+@pytest.mark.django_db
+def test_upload_profile_photo(user, auth_user_client, image):
+    payload = dict(
+        file=image,
+    )
+    url = reverse('users-detail', args=(user.pk,))
+    response = auth_user_client.patch(url, payload)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data.get('image_s3_path')

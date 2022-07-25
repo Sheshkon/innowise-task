@@ -1,5 +1,5 @@
 #!/bin/sh
-echo 'start web'
+echo 'start celery worker'
 MAX_TRIES_CONNECTIONS=5
 sleep 10
 result=$(curl -s "$LOCALSTACK_ENDPOINT_URL")
@@ -13,9 +13,8 @@ do
 done
 
 if [ "$tries_connections" = "$MAX_TRIES_CONNECTIONS" ]; then
-  echo 'failed start web: cannot connect to localstack services'
+  echo 'failed start worker: cannot connect to aws services'
 else
-  python manage.py migrate
-  python manage.py runserver 0.0.0.0:8000
-  echo 'web started'
+  celery -A innotter worker -l INFO
+  echo 'celery worker started'
 fi

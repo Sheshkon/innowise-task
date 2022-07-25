@@ -2,11 +2,12 @@ from datetime import datetime
 
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
+from innotter.aws_services import upload_file_to_s3
 from innotter.views import SerializersPermissionsBaseViewSet
 from pages.filters import PageFilter
 from users.permissions import IsAdmin, IsModerator, IsNotBlocked
@@ -159,11 +160,21 @@ class PagesViewSet(SerializersPermissionsBaseViewSet):
         reject_follow_request(page=self.get_object(), one=one, user_id=user_id)
         return Response(status=HTTP_200_OK)
 
-    def get_queryset(self):
+    def get_queryset(self   ):
         if self.action == 'list' and self.request.user.role == 'user':
             return Page.objects.filter(owner=self.request.user)
 
         return self.queryset
+
+    def perform_update(self, serializer):
+        image = self.request.FILES.get('file')
+        if image:
+            image_s3_path = upload_file_to_s3(
+                file_path=image,
+                key=f'{self.get_object().uuid}'
+            )
+            serializer.validated_data['image'] = image_s3_path
+        serializer.save()
 
 
 class TagsViewSet(SerializersPermissionsBaseViewSet):

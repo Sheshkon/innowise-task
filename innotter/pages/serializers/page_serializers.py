@@ -1,10 +1,17 @@
 from rest_framework import serializers
+
+from innotter.aws_services import get_presigned_url
 from pages.models import Page
 
 
 class BasePageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = Page
+
+    def get_image(self, obj):
+        return get_presigned_url(obj.image)
 
 
 class PageSerializer(BasePageSerializer):
@@ -17,7 +24,7 @@ class BlockPageSerializer(BasePageSerializer):
 
     class Meta(BasePageSerializer.Meta):
         fields = ('is_to_permanent', 'unblock_date')
-        read_only_fields = ('unblock_date', )
+        read_only_fields = ('unblock_date',)
 
 
 class CreatePageSerializer(BasePageSerializer):
@@ -36,9 +43,10 @@ class RetrievePageSerializer(BasePageSerializer):
 
 
 class UpdatePageSerializer(BasePageSerializer):
+    file = serializers.FileField(allow_null=True, write_only=True)
 
     class Meta(BasePageSerializer.Meta):
-        fields = ('name', 'uuid', 'description', 'image', 'is_private',)
+        fields = ('name', 'uuid', 'description', 'image', 'is_private', 'file')
 
 
 class ListPageSerializer(BasePageSerializer):

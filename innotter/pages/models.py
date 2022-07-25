@@ -8,7 +8,7 @@ class Page(models.Model):
     tags = models.ManyToManyField('Tag', related_name='pages')
     owner = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='pages')
     followers = models.ManyToManyField('users.User', related_name='follows')
-    image = models.URLField(null=True, blank=True)
+    image = models.CharField(max_length=200, null=True, blank=True)
     is_private = models.BooleanField(default=False)
     follow_requests = models.ManyToManyField('users.User', related_name='requests')
     unblock_date = models.DateTimeField(null=True, blank=True)
