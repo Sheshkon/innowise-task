@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from innotter.aws_services import get_presigned_url
 from pages.models import Page
+from pages.serializers.post_serializers import StatsPostSerializer
 
 
 class BasePageSerializer(serializers.ModelSerializer):
@@ -78,3 +79,23 @@ class AcceptOrRejectRequestSerializer(BasePageSerializer):
 
     class Meta(BasePageSerializer.Meta):
         fields = ('id', 'one', 'user_id')
+
+
+class StatsPageSerializer(BasePageSerializer):
+    followers = serializers.SerializerMethodField()
+    follow_requests = serializers.SerializerMethodField()
+    posts = StatsPostSerializer(many=True)
+    posts_amount = serializers.SerializerMethodField()
+
+    class Meta(BasePageSerializer.Meta):
+        fields = ('id', 'name', 'followers', 'follow_requests', 'posts_amount', 'posts')
+
+    def get_followers(self, obj):
+        return obj.followers.count()
+
+    def get_follow_requests(self, obj):
+        return obj.follow_requests.count()
+
+    def get_posts_amount(self, obj):
+        return obj.posts.count()
+

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from pages.models import Post
+from pages.models import Post, Like
 
 
 class BasePostSerializer(serializers.ModelSerializer):
@@ -32,3 +32,14 @@ class RetrievePostSerializer(BasePostSerializer):
 
     class Meta(BasePostSerializer.Meta):
         fields = ('id', 'content', 'created_at',  'updated_at', 'page', 'reply_to')
+
+
+class StatsPostSerializer(BasePostSerializer):
+    likes = serializers.SerializerMethodField()
+
+    class Meta(BasePostSerializer.Meta):
+        fields = ('id', 'likes')
+
+    def get_likes(self, obj):
+        return obj.likes.count()
+
