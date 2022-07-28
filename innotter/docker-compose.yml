@@ -1,4 +1,4 @@
-version: '3.9'
+﻿version: '3.9'
 
 services:
 
@@ -56,11 +56,12 @@ services:
       - '4566:4566'
     environment:
       - EDGE_PORT=4566
-      - SERVICES=lambda,s3,ses
+      - SERVICES=lambda,s3,ses,dynamodb
       - DATA_DIR=/tmp/localstack/data
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - S3_BUCKET=${S3_BUCKET}
       - DEBUG=1
     volumes:
       - ./aws:/docker-entrypoint-initaws.d
