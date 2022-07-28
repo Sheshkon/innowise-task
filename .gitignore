@@ -1,6 +1,5 @@
 .env
 .idea/
+innotter/localstack
 innotter/data/
 *.pyc
-
-recorded_api_calls.json
