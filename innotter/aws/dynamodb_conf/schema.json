@@ -4,9 +4,17 @@
     {
       "KeyType": "HASH",
       "AttributeName": "id"
+    },
+    {
+      "KeyType": "RANGE",
+      "AttributeName": "date"
     }
   ],
   "AttributeDefinitions": [
+    {
+      "AttributeName": "date",
+      "AttributeType": "S"
+    },
     {
       "AttributeName": "id",
       "AttributeType": "N"
