@@ -39,12 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'django_celery_beat',
+
     'django_filters',
     'corsheaders',
     'rest_framework',
     'users.apps.UsersConfig',
     'pages.apps.PagesConfig',
-
 ]
 
 MIDDLEWARE = [
@@ -177,4 +178,3 @@ AWS_PROFILE = os.environ.get('AWS_PROFILE')
 S3_BUCKET = os.environ.get('S3_BUCKET')
 SOURCE_EMAIL = os.environ.get('SOURCE_EMAIL')
 ALLOWED_FILE_EXTENSIONS = ('jpeg', 'jpg', 'png',)
-
