@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from kombu import Queue, Exchange
 
 load_dotenv()
 
@@ -148,6 +149,8 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOW_CREDENTIALS = True  # to accept cookies via ajax request
+CORS_ORIGIN_ALLOW_ALL = True
+
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000'  # the domain for front-end app(you can add more than 1)
 ]
@@ -167,6 +170,11 @@ CELERY_ACCEPT_CONTENT = ('application/json',)
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
+
+CELERY_DEFAULT_QUEUE = 'innotter'
+CELERY_QUEUES = (
+    Queue('innotter', Exchange('innotter'), routing_key='innotter'),
+)
 
 AWS_DEFAULT_REGION = os.environ.get('AWS_DEFAULT_REGION')
 LOCALSTACK_ENDPOINT_URL = os.environ.get('LOCALSTACK_ENDPOINT_URL')
