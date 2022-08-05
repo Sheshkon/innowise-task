@@ -15,6 +15,6 @@ done
 if [ "$tries_connections" = "$MAX_TRIES_CONNECTIONS" ]; then
   echo 'failed start worker: cannot connect to aws services'
 else
-  celery -A innotter worker --beat --scheduler django --loglevel=info
+  celery -A innotter worker -B --scheduler django --loglevel=info
   echo 'celery worker started'
 fi
