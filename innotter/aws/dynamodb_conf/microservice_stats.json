@@ -1,0 +1,24 @@
+{
+  "TableName": "stats",
+  "KeySchema": [
+    {
+      "KeyType": "HASH",
+      "AttributeName": "id"
+    },
+    {
+      "KeyType": "RANGE",
+      "AttributeName": "period"
+    }
+  ],
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "period",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "id",
+      "AttributeType": "N"
+    }
+  ],
+  "BillingMode": "PAY_PER_REQUEST"
+}
